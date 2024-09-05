@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './Zone.css';
 
+const allCities = ['London', 'Paris', 'New York', 'Tokyo', 'Ranchi', 'Mumbai', 'Berlin', 'Sydney', 'Chicago'];
+
 const zones = ['Zone 1', 'Zone 2', 'Zone 3', 'Zone 4', 'Zone 5', 'Zone 6'];
 const priorities = ['Traffic', 'AQI-based', 'Safety'];
 const weatherOptions = ['Cloudy', 'Rainy', 'Clear'];
@@ -13,9 +15,13 @@ const Zone = () => {
   const [priority, setPriority] = useState('');
   const [weather, setWeather] = useState('');
   const [timestamp, setTimestamp] = useState('');
-  const [searchResult, setSearchResult] = useState(null); // To store the final object
+  const [searchResult, setSearchResult] = useState(null);
+  const [currentTemperature, setCurrentTemperature] = useState('');
+  const [manualLocation, setManualLocation] = useState('');
+  const [manualTemperature, setManualTemperature] = useState('');
+  const [filteredCities, setFilteredCities] = useState([]);  
+  const [showDropdown, setShowDropdown] = useState(false);   
 
-  // Function to capture date, time, and day
   const getCurrentTimestamp = () => {
     const now = new Date();
     const date = now.toLocaleDateString();
@@ -30,13 +36,42 @@ const Zone = () => {
     setDisplayText(`Start: ${startZone} | End: ${endZone}`);
   };
 
+  const fetchWeatherByLocation = async (location) => {
+    try {
+      const apiKey = '7add5d6b2d8535f80027ebadfad13a0a';  // Replace with your actual OpenWeatherMap API key
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${apiKey}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.main && data.main.temp) {
+        setManualTemperature(`${data.main.temp} °C`);
+      } else {
+        setManualTemperature('Temperature data not available for this location');
+      }
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+      setManualTemperature('Error fetching weather data');
+    }
+  };
+
   const handleMoreDetails = () => {
     setShowDetails(true);
     const timestampObj = getCurrentTimestamp();
     setTimestamp(`Date: ${timestampObj.date}, Time: ${timestampObj.time}, Day: ${timestampObj.day}`);
   };
 
-  // Function to handle "Search Routes" click and create the object
+  const handleCityInputChange = (e) => {
+    const input = e.target.value;
+    setManualLocation(input);
+    if (input) {
+        const filtered = allCities.filter(city => city.toLowerCase().includes(input.toLowerCase()));
+        setFilteredCities(filtered);
+        setShowDropdown(true); 
+      } else {
+        setShowDropdown(false);  
+      }
+  };
+
   const handleSearchRoutes = () => {
     const routeDetails = {
       startZone,
@@ -44,6 +79,9 @@ const Zone = () => {
       priority,
       weather,
       timestamp: getCurrentTimestamp(),
+      currentTemperature,
+      manualTemperature,
+      manualLocation,
     };
 
     setSearchResult(routeDetails); // Set the object to display
@@ -116,6 +154,33 @@ const Zone = () => {
               ))}
             </select>
           </div>
+
+          {/* Manual location input and temperature display */}
+                <div className="manual-location">
+            <label>Enter Location: </label>
+            <input
+                type="text"
+                value={manualLocation}
+                onChange={handleCityInputChange}
+                placeholder="Enter city"
+                onFocus={() => setShowDropdown(true)}  
+                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}  
+            />
+            {showDropdown && filteredCities.length > 0 && (
+                <ul className="city-dropdown">
+                {filteredCities.map((city, index) => (
+                    <li key={index} onClick={() => { 
+                    setManualLocation(city); 
+                    fetchWeatherByLocation(city); 
+                    setShowDropdown(false); 
+                    }}>
+                    {city}
+                    </li>
+                ))}
+                </ul>
+            )}
+            {manualTemperature && <p>Temperature for {manualLocation}: {manualTemperature}</p>}
+            </div>
         </div>
       )}
 
@@ -128,7 +193,7 @@ const Zone = () => {
       {searchResult && (
         <div className="search-result">
           <h3>Route Details</h3>
-          <pre>{JSON.stringify(searchResult, null, 2)}</pre> {/* Pretty print the object */}
+          <pre>{JSON.stringify(searchResult, null, 2)}</pre> 
         </div>
       )}
     </div>
