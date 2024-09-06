@@ -8,7 +8,7 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          {/* Route for the Landing Page */}
+
           <Route
             path="/"
             element={
@@ -21,7 +21,6 @@ function App() {
             }
           />
           
-          {/* Route for the Zone Component */}
           <Route path="/zone" element={<Zone />} />
         </Routes>
       </div>

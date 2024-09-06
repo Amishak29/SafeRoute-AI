@@ -1,4 +1,4 @@
-/* General Styles */
+
 .zone-container {
     display: flex;
     flex-direction: column;
@@ -14,12 +14,11 @@
 }
 
 h2 {
-    font-size: 2.2rem;
+    font-size: 4vw;
     margin-bottom: 20px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Flexbox for Dropdowns */
 .dropdowns {
     display: flex;
     flex-direction: row;
@@ -39,7 +38,7 @@ h2 {
 label {
     margin-bottom: 10px;
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 1.8vw;
 }
 
 select, input {
@@ -60,8 +59,105 @@ select:hover, input:hover {
     box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* Button Styles */
-.display-button, .more-details-button, .search-button {
+.manual-location {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px; 
+    flex-wrap: wrap; 
+    margin-top: 20px;
+    position: relative; 
+}
+
+.manual-location label {
+    font-size: 1.5rem;
+    margin-right: 10px;
+}
+
+.manual-location input {
+    width: 250px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc; 
+    z-index: 1; 
+}
+
+
+.manual-location button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.manual-location button:hover {
+    background-color: #218838;
+}
+
+.manual-location p {
+    margin-top: 10px;
+}
+
+.city-dropdown {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    max-height: 150px;
+    overflow-y: auto;
+    width: 250px;
+    position: absolute; 
+    top: 55px; 
+    z-index: 10; 
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.city-dropdown li {
+    padding: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.city-dropdown li:hover {
+    background-color: #f0f0f0;
+    color: #007bff;
+}
+
+@media (max-width: 768px) {
+    .manual-location {
+        flex-direction: column; 
+        align-items: flex-start;
+    }
+
+    .manual-location input, .manual-location button {
+        width: 100%;
+        max-width: 100%;
+        margin: 5px 0; 
+    }
+
+    .city-dropdown {
+        width: 100%; 
+    }
+}
+
+@media (max-width: 480px) {
+    .manual-location input, .manual-location button {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .manual-location input, .manual-location button {
+        font-size: 0.9rem;
+    }
+}
+.display-button, .more-details-button, .search-button, .fetch-button {
     padding: 12px 25px;
     border: none;
     border-radius: 30px;
@@ -105,7 +201,25 @@ select:hover, input:hover {
     box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* Textbox and Results Display */
+.fetch-button {
+    background-color: #28a745; 
+    color: white; 
+    border: none; 
+    padding: 10px 20px; 
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 10px 0; 
+    cursor: pointer;
+    border-radius: 5px; 
+    transition: background-color 0.3s ease-in-out; 
+}
+
+.fetch-button:hover {
+    background-color: #218838; 
+}
+
 .textbox, .search-result {
     margin-top: 20px;
     padding: 20px;
@@ -130,31 +244,25 @@ pre {
     color: #333;
 }
 
-.manual-location {
-    position: relative;
-}
-
-
+/* City Suggestions Dropdown */
 .city-dropdown {
     list-style: none;
     padding: 0;
-    margin: 5px 0 0 0;
+    margin: 5px 0;
     background: white;
     border: 1px solid #ccc;
-    border-radius: 8px;
+    border-radius: 5px;
     max-height: 150px;
     overflow-y: auto;
+    width: 250px;
     position: absolute;
-    width: 240px;
     z-index: 10;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-    
 }
 
 .city-dropdown li {
     padding: 10px;
     cursor: pointer;
-    font-size: 1rem;
 }
 
 .city-dropdown li:hover {
@@ -169,19 +277,24 @@ pre {
         align-items: center;
     }
 
-    select, input {
+    select, input, .display-button, .more-details-button, .search-button, .fetch-button {
         width: 100%;
-        max-width: 300px;
-    }
-
-    .display-button, .more-details-button, .search-button {
-        width: 100%;
-        max-width: 300px;
+        max-width: 300px; /* Limiting width for smaller screens */
     }
 
     .textbox, .search-result {
         width: 100%;
         max-width: 90%;
+    }
+
+    .manual-location {
+        flex-direction: column; /* Stack input and button on top of each other */
+    }
+
+    .manual-location input, .manual-location button {
+        width: 100%;
+        max-width: 100%; /* Full width for mobile */
+        margin: 5px 0; /* Spacing between input and button */
     }
 }
 
@@ -195,7 +308,7 @@ pre {
         max-width: 300px;
     }
 
-    .display-button, .more-details-button, .search-button {
+    .display-button, .more-details-button, .search-button, .fetch-button {
         width: 100%;
         max-width: 250px;
         font-size: 1rem;
@@ -204,5 +317,20 @@ pre {
     .textbox, .search-result {
         width: 100%;
         max-width: 95%;
+    }
+}
+
+@media (max-width: 360px) {
+    .display-button, .more-details-button, .search-button, .fetch-button {
+        font-size: 1rem;
+        max-width: 200px;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .manual-location input, .manual-location button {
+        font-size: 0.9rem;
     }
 }

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import './Zone.css';
 
-const allCities = ['London', 'Paris', 'New York', 'Tokyo', 'Ranchi', 'Mumbai', 'Berlin', 'Sydney', 'Chicago'];
-
 const zones = ['Zone 1', 'Zone 2', 'Zone 3', 'Zone 4', 'Zone 5', 'Zone 6'];
 const priorities = ['Traffic', 'AQI-based', 'Safety'];
 const weatherOptions = ['Cloudy', 'Rainy', 'Clear'];
@@ -19,8 +17,9 @@ const Zone = () => {
   const [currentTemperature, setCurrentTemperature] = useState('');
   const [manualLocation, setManualLocation] = useState('');
   const [manualTemperature, setManualTemperature] = useState('');
-  const [filteredCities, setFilteredCities] = useState([]);  
-  const [showDropdown, setShowDropdown] = useState(false);   
+  const [fetching, setFetching] = useState(false); 
+  const [citySuggestions, setCitySuggestions] = useState([]); 
+  const [selectedCity, setSelectedCity] = useState('');
 
   const getCurrentTimestamp = () => {
     const now = new Date();
@@ -36,21 +35,73 @@ const Zone = () => {
     setDisplayText(`Start: ${startZone} | End: ${endZone}`);
   };
 
+  const fetchWeatherByCoordinates = async (latitude, longitude) => {
+    const apiKey = '22c13c85c39279222aa75aac72be8ca7'; 
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${apiKey}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    setCurrentTemperature(`${data.main.temp} °C`);
+  };
+
   const fetchWeatherByLocation = async (location) => {
+    const apiKey = '22c13c85c39279222aa75aac72be8ca7'; 
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${apiKey}`;
+
     try {
-      const apiKey = '7add5d6b2d8535f80027ebadfad13a0a';  // Replace with your actual OpenWeatherMap API key
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${apiKey}`;
+      setFetching(true); 
       const response = await fetch(url);
       const data = await response.json();
 
       if (data.main && data.main.temp) {
         setManualTemperature(`${data.main.temp} °C`);
       } else {
-        setManualTemperature('Temperature data not available for this location');
+        setManualTemperature('Temperature data not available');
       }
     } catch (error) {
       console.error('Error fetching weather data:', error);
-      setManualTemperature('Error fetching weather data');
+      setManualTemperature('Error fetching temperature');
+    } finally {
+      setFetching(false);
+    }
+  };
+  const fetchCitySuggestions = async (input) => {
+    const apiKey = '22c13c85c39279222aa75aac72be8ca7'; // Replace with your OpenWeatherMap API key
+    const url = `http://api.openweathermap.org/data/2.5/find?q=${input}&type=like&sort=population&cnt=5&appid=${apiKey}`;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      setCitySuggestions(data.list.map(city => city.name));
+    } catch (error) {
+      console.error('Error fetching city suggestions:', error);
+    }
+  };
+  const handleCityInputChange = (e) => {
+    const input = e.target.value;
+    setManualLocation(input);
+    if (input.length >= 3) {
+      fetchCitySuggestions(input);
+    } else {
+      setCitySuggestions([]);
+    }
+  };
+  const handleSuggestionClick = (city) => {
+    setSelectedCity(city);
+    setManualLocation(city);
+    setCitySuggestions([]); 
+  };
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          fetchWeatherByCoordinates(latitude, longitude);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+        }
+      );
+    } else {
+      console.error('Geolocation is not supported by this browser.');
     }
   };
 
@@ -58,18 +109,8 @@ const Zone = () => {
     setShowDetails(true);
     const timestampObj = getCurrentTimestamp();
     setTimestamp(`Date: ${timestampObj.date}, Time: ${timestampObj.time}, Day: ${timestampObj.day}`);
-  };
 
-  const handleCityInputChange = (e) => {
-    const input = e.target.value;
-    setManualLocation(input);
-    if (input) {
-        const filtered = allCities.filter(city => city.toLowerCase().includes(input.toLowerCase()));
-        setFilteredCities(filtered);
-        setShowDropdown(true); 
-      } else {
-        setShowDropdown(false);  
-      }
+    getCurrentLocation();
   };
 
   const handleSearchRoutes = () => {
@@ -81,10 +122,10 @@ const Zone = () => {
       timestamp: getCurrentTimestamp(),
       currentTemperature,
       manualTemperature,
-      manualLocation,
+      manualLocation: selectedCity || manualLocation, 
     };
 
-    setSearchResult(routeDetails); // Set the object to display
+    setSearchResult(routeDetails);
   };
 
   return (
@@ -122,7 +163,7 @@ const Zone = () => {
 
       <div className="textbox">
         <p>{displayText}</p>
-        <p>{timestamp}</p> {/* Display the captured time, date, and day */}
+        <p>{timestamp}</p>
       </div>
 
       <button className="more-details-button" onClick={handleMoreDetails}>
@@ -155,45 +196,45 @@ const Zone = () => {
             </select>
           </div>
 
-          {/* Manual location input and temperature display */}
-                <div className="manual-location">
+          <div>
+            <p>Current Location Temperature: {currentTemperature}</p>
+          </div>
+
+          <div className="manual-location">
             <label>Enter Location: </label>
             <input
-                type="text"
-                value={manualLocation}
-                onChange={handleCityInputChange}
-                placeholder="Enter city"
-                onFocus={() => setShowDropdown(true)}  
-                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}  
+              type="text"
+              value={manualLocation}
+              onChange={handleCityInputChange}
+              placeholder="Enter city"
             />
-            {showDropdown && filteredCities.length > 0 && (
-                <ul className="city-dropdown">
-                {filteredCities.map((city, index) => (
-                    <li key={index} onClick={() => { 
-                    setManualLocation(city); 
-                    fetchWeatherByLocation(city); 
-                    setShowDropdown(false); 
-                    }}>
-                    {city}
-                    </li>
-                ))}
-                </ul>
-            )}
+            <ul className="city-dropdown">
+              {citySuggestions.map((city, index) => (
+                <li key={index} onClick={() => handleSuggestionClick(city)}>
+                  {city}
+                </li>
+              ))}
+            </ul>
+            <button
+              className="fetch-button"
+              onClick={() => fetchWeatherByLocation(manualLocation)}
+              disabled={fetching} 
+            >
+              {fetching ? 'Fetching...' : 'Fetch Temperature'}
+            </button>
             {manualTemperature && <p>Temperature for {manualLocation}: {manualTemperature}</p>}
-            </div>
+          </div>
         </div>
       )}
 
-      {/* New button to create and display the final object */}
       <button className="search-button" onClick={handleSearchRoutes}>
         Search Routes
       </button>
 
-      {/* Display the final object */}
       {searchResult && (
         <div className="search-result">
           <h3>Route Details</h3>
-          <pre>{JSON.stringify(searchResult, null, 2)}</pre> 
+          <pre>{JSON.stringify(searchResult, null, 2)}</pre>
         </div>
       )}
     </div>
